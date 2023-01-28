@@ -364,7 +364,7 @@ var processEvent = function(event, context) {
   try {
     eventSnsMessage = JSON.parse(eventSnsMessageRaw);
   }
-  catch (e) {    
+  catch (e) {
   }
 
   if(eventSubscriptionArn.indexOf(config.services.codepipeline.match_text) > -1 || eventSnsSubject.indexOf(config.services.codepipeline.match_text) > -1 || eventSnsMessageRaw.indexOf(config.services.codepipeline.match_text) > -1){
@@ -417,8 +417,13 @@ exports.handler = function(event, context) {
     hookUrl = config.unencryptedHookUrl;
     processEvent(event, context);
   } else if (config.kmsEncryptedHookUrl && config.kmsEncryptedHookUrl !== '<kmsEncryptedHookUrl>') {
-    var encryptedBuf = new Buffer(config.kmsEncryptedHookUrl, 'base64');
-    var cipherText = { CiphertextBlob: encryptedBuf };
+    var encryptedBuf = new Buffer.from(config.kmsEncryptedHookUrl, 'base64');
+    var cipherText = {
+      CiphertextBlob: encryptedBuf,
+      EncryptionAlgorithm: "RSAES_OAEP_SHA_256",
+      KeyId: config.kmsKeyId,
+    };
+
     var kms = new AWS.KMS();
 
     kms.decrypt(cipherText, function(err, data) {
